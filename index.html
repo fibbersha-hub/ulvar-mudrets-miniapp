@@ -359,15 +359,25 @@ let isLoading = false;
 let currentMode = "auto";
 
 // ── VK Bridge init ────────────────────────────────────
+function isInsideVK() {
+  // VK передаёт параметры vk_* в URL при запуске мини-апки
+  return window.location.search.includes("vk_") ||
+         window.location.hash.includes("vk_") ||
+         document.referrer.includes("vk.com") ||
+         window.parent !== window;
+}
+
 async function initVK() {
   try {
-    if (window.vkBridge) {
+    if (window.vkBridge && isInsideVK()) {
       await vkBridge.send("VKWebAppInit");
       const data = await vkBridge.send("VKWebAppGetUserInfo");
       vkUserId = String(data.id);
+    } else {
+      // Открыто вне VK — dev/preview режим
+      vkUserId = "dev";
     }
   } catch (e) {
-    // Dev режим без VK
     vkUserId = "dev";
   }
   await loadMode();
